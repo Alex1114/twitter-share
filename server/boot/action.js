@@ -2,6 +2,8 @@ var passport = require('passport');
 var Strategy = require('passport-twitter');
 var Twit = require('twit');
 var path = require('path');
+const https = require("https");
+const fs = require("fs");
 
 module.exports = function() {
   
@@ -35,36 +37,57 @@ module.exports = function() {
         timeout_ms:           60*1000,  // optional HTTP request timeout to apply to all requests.
         strictSSL:            false,     // optional - requires SSL certificates to be valid.
       })
-    
-      var video = path.join(__dirname, '../public/videos/test.mp4');
-      var twitText = 'Text here...';
 
-      T.postMediaChunked({ file_path: video }, function (err, data, response) {
-        
-        function checkUploadStatus(data) {
-          if (!data.media_id_string) return;
-          var sec = data.processing_info.check_after_secs;
 
-          setTimeout(function() {
-            T.get('media/upload', { command: 'STATUS', media_id: data.media_id_string },  function (err, data, response) {
-              if (data.processing_info.state === 'succeeded') {
-                postTwitWithVideo(data.media_id_string)
+
+      // URL of the image
+      const url = "https://gateway.pinata.cloud/ipfs/QmeB95KiZrNBfv2uu3QdNAPfVT2DZopYBWCqaGwDsjWRBQ";
+
+      https.get(url, (res) => {
+        var video = path.join(__dirname, '../public/videos/2.mp4');
+        const writeStream = fs.createWriteStream(video);
+
+        res.pipe(writeStream);
+
+        writeStream.on("finish", () => {
+            writeStream.close();
+            console.log('File download!');
+            
+            var twitText = 'Text here...';
+            T.postMediaChunked({ file_path: video }, function (err, data, response) {
+              
+              function checkUploadStatus(data) {
+                if (!data.media_id_string) return;
+                var sec = data.processing_info.check_after_secs;
+      
+                setTimeout(function() {
+                  T.get('media/upload', { command: 'STATUS', media_id: data.media_id_string },  function (err, data, response) {
+                    if (data.processing_info.state === 'succeeded') {
+                      postTwitWithVideo(data.media_id_string)
+                    }
+                    else { checkUploadStatus(data) }
+                  })
+                }, sec * 1000)
               }
-              else { checkUploadStatus(data) }
+      
+              function postTwitWithVideo(videoId) {
+                T.post('statuses/update', { status: twitText, media_ids: [videoId] }, function(err, data, response) {
+                  console.log(data)
+
+                  fs.unlinkSync(video);
+                  console.log('File deleted!');
+                })
+              }
+      
+              checkUploadStatus(data)
+
             })
-          }, sec * 1000)
-        }
-
-        function postTwitWithVideo(videoId) {
-          T.post('statuses/update', { status: twitText, media_ids: [videoId] }, function(err, data, response) {
-            console.log(data)
-          })
-        }
-
-        checkUploadStatus(data)
-
+        })
       })
+
+
     
+
     
     return cb(null, {...profile, token, tokenSecret});
   }));
