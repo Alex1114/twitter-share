@@ -23,15 +23,15 @@ module.exports = function() {
   // with a user object, which will be set at `req.user` in route handlers after
   // authentication.
   passport.use(new Strategy({
-      consumerKey: process.env['TWITTER_CONSUMER_KEY'],
-      consumerSecret: process.env['TWITTER_CONSUMER_SECRET'],
+      consumerKey: "RH0Fouuasl2WoPsAfmkIuTw3N",
+      consumerSecret: "jtSb5Z7nJcXL64yfyc3Nivs5zjaccOnaaZ0rc1gMR5XpDuk7Zg",
       callbackURL: '/oauth/callback/twitter.com',
     },
     function(token, tokenSecret, profile, cb) {
 
       var T = new Twit({
-        consumer_key:         process.env['TWITTER_CONSUMER_KEY'],
-        consumer_secret:      process.env['TWITTER_CONSUMER_SECRET'],
+        consumer_key:         "RH0Fouuasl2WoPsAfmkIuTw3N",
+        consumer_secret:      "jtSb5Z7nJcXL64yfyc3Nivs5zjaccOnaaZ0rc1gMR5XpDuk7Zg",
         access_token:         token,
         access_token_secret:  tokenSecret,
         timeout_ms:           60*1000,  // optional HTTP request timeout to apply to all requests.
